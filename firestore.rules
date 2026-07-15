@@ -1,0 +1,137 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // 1. Global Safety Net: Default deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // -------------------------------------------------------------------------
+    // Primitive Definitions & Helpers
+    // -------------------------------------------------------------------------
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isValidEmail(email) {
+      return email is string && email.size() <= 128 && email.matches('^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$');
+    }
+
+    // -------------------------------------------------------------------------
+    // Entity Schema Validation Helpers
+    // -------------------------------------------------------------------------
+
+    function isValidUser(data) {
+      return data.name is string && data.name.size() <= 200 &&
+             data.role is string && data.role in ['volunteer', 'fisherman', 'business', 'tourist', 'admin'] &&
+             data.regionId is string && data.regionId.size() <= 100 &&
+             data.avatarUrl is string && data.avatarUrl.size() <= 500 &&
+             data.balance is number && data.balance >= 0;
+    }
+
+    function isValidActivity(data) {
+      return data.type is string && data.type in ['recycling', 'cleanup', 'payment', 'spend', 'refill'] &&
+             data.region is string && data.region.size() <= 100 &&
+             data.date is string && data.date.size() <= 50 &&
+             data.description is string && data.description.size() <= 1000 &&
+             data.coinEarned is number &&
+             data.quantityDetails is string && data.quantityDetails.size() <= 1000 &&
+             data.status is string && data.status in ['verified', 'pending'];
+    }
+
+    function isValidTransfer(data) {
+      return data.senderEmail is string && isValidEmail(data.senderEmail) &&
+             data.recipientEmail is string && isValidEmail(data.recipientEmail) &&
+             data.amount is number && data.amount > 0 &&
+             data.currency is string && data.currency in ['AND', 'USD', 'THB', 'JPY', 'GBP', 'EUR'] &&
+             data.description is string && data.description.size() <= 1000 &&
+             data.status is string && data.status in ['pending', 'approved', 'rejected'] &&
+             data.createdAt is string;
+    }
+
+    function isValidReward(data) {
+      return data.title is string && data.title.size() <= 200 &&
+             data.cost is number && data.cost >= 0 &&
+             data.category is string && data.category in ['travel', 'product', 'merchandise', 'voucher', 'fiat_cash', 'souvenir'] &&
+             data.description is string && data.description.size() <= 2000 &&
+             data.image is string && data.image.size() <= 500 &&
+             data.stock is number && data.stock >= 0;
+    }
+
+    function isValidOtp(data) {
+      return data.email is string && isValidEmail(data.email) &&
+             data.hashedOtp is string &&
+             data.expiresAt is number &&
+             data.attempts is number &&
+             data.requestTimes is list &&
+             data.isLocked is bool &&
+             data.lockedUntil is number;
+    }
+
+    function isValidAuditLog(data) {
+      return data.email is string && isValidEmail(data.email) &&
+             data.action is string && data.action.size() <= 100 &&
+             data.timestamp is string &&
+             data.ip is string && data.ip.size() <= 50 &&
+             data.userAgent is string && data.userAgent.size() <= 500 &&
+             data.details is string && data.details.size() <= 2000;
+    }
+
+    // -------------------------------------------------------------------------
+    // Collection Path Match Rules
+    // -------------------------------------------------------------------------
+
+    // 2. Users Collection
+    match /users/{email} {
+      allow get, list: if true;
+      allow create: if isValidUser(incoming()) && email == incoming().email;
+      allow update: if isValidUser(incoming()) && email == incoming().email;
+      allow delete: if false;
+    }
+
+    // 3. Activities Collection
+    match /activities/{activityId} {
+      allow read: if true;
+      allow create: if isValidActivity(incoming());
+      allow update, delete: if false; // Immutable logs
+    }
+
+    // 4. Transfers Collection
+    match /transfers/{transferId} {
+      allow read: if true;
+      allow create: if isValidTransfer(incoming()) && transferId == incoming().id;
+      allow update: if isValidTransfer(incoming());
+      allow delete: if false; // Immutable records
+    }
+
+    // 5. Rewards Collection
+    match /rewards/{rewardId} {
+      allow read: if true;
+      allow write: if isValidReward(incoming());
+    }
+
+    // 6. OTPs Collection
+    match /otps/{email} {
+      allow read: if true;
+      allow write: if isValidOtp(incoming()) && email == incoming().email;
+      allow delete: if true;
+    }
+
+    // 7. Password Reset Audit Logs Collection
+    match /password_reset_audit_logs/{logId} {
+      allow read: if true;
+      allow create: if isValidAuditLog(incoming());
+      allow update, delete: if false; // Immutable audit trails
+    }
+  }
+}

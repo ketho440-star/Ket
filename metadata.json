@@ -1,0 +1,6 @@
+{
+  "name": "AndamanCoin",
+  "description": "A sustainable eco-themed application that incentivizes environmental conservation across the Andaman region. Features multi-currency fiat wallets, green stock trading, interactive regional maps, an AI Eco Assistant, and real-time Firestore persistence.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

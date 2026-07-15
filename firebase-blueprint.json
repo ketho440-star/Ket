@@ -1,0 +1,263 @@
+{
+  "entities": {
+    "DbUser": {
+      "title": "DbUser",
+      "description": "User profile inside the system with balances and optional password",
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "User email address"
+        },
+        "name": {
+          "type": "string",
+          "maxLength": 200,
+          "description": "User full name"
+        },
+        "role": {
+          "type": "string",
+          "enum": ["volunteer", "fisherman", "business", "tourist", "admin"],
+          "description": "The ecological role of the user"
+        },
+        "regionId": {
+          "type": "string",
+          "description": "The active region of the user"
+        },
+        "avatarUrl": {
+          "type": "string",
+          "description": "URL to the user's avatar image"
+        },
+        "balance": {
+          "type": "number",
+          "description": "AND Coin balance"
+        }
+      },
+      "required": ["email", "name", "role", "regionId", "balance"]
+    },
+    "EcoActivity": {
+      "title": "EcoActivity",
+      "description": "A verified ecological activity log in the system",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique activity ID"
+        },
+        "type": {
+          "type": "string",
+          "enum": ["recycling", "cleanup", "payment", "spend", "refill"],
+          "description": "Activity type category"
+        },
+        "region": {
+          "type": "string",
+          "description": "Region ID where the activity took place"
+        },
+        "date": {
+          "type": "string",
+          "description": "Date of activity"
+        },
+        "description": {
+          "type": "string",
+          "maxLength": 1000,
+          "description": "Short details of the activity"
+        },
+        "coinEarned": {
+          "type": "number",
+          "description": "Amount of AND coins earned or spent"
+        },
+        "quantityDetails": {
+          "type": "string",
+          "maxLength": 1000,
+          "description": "Specific quantities (e.g. '12 kg plastic')"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["verified", "pending"],
+          "description": "Verification status of the activity"
+        }
+      },
+      "required": ["type", "region", "date", "description", "coinEarned", "status"]
+    },
+    "CoinTransfer": {
+      "title": "CoinTransfer",
+      "description": "A peer-to-peer or cross-border money transfer ledger entry",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique transfer transaction ID"
+        },
+        "senderEmail": {
+          "type": "string",
+          "format": "email",
+          "description": "Sender user email"
+        },
+        "recipientEmail": {
+          "type": "string",
+          "format": "email",
+          "description": "Recipient user email"
+        },
+        "amount": {
+          "type": "number",
+          "description": "Amount of money transferred"
+        },
+        "currency": {
+          "type": "string",
+          "enum": ["AND", "USD", "THB", "JPY", "GBP", "EUR"],
+          "description": "Transfer currency"
+        },
+        "description": {
+          "type": "string",
+          "maxLength": 1000,
+          "description": "Memo details"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["pending", "approved", "rejected"],
+          "description": "Escrow transfer state"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Creation timestamp"
+        }
+      },
+      "required": ["senderEmail", "recipientEmail", "amount", "currency", "status", "createdAt"]
+    },
+    "RewardItem": {
+      "title": "RewardItem",
+      "description": "An item in the green reward shop catalog",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique item ID"
+        },
+        "title": {
+          "type": "string",
+          "maxLength": 200,
+          "description": "Title of the reward"
+        },
+        "cost": {
+          "type": "number",
+          "description": "Redeem cost in AND coins"
+        },
+        "category": {
+          "type": "string",
+          "enum": ["travel", "product", "merchandise", "voucher", "fiat_cash", "souvenir"],
+          "description": "Category of the reward"
+        },
+        "description": {
+          "type": "string",
+          "maxLength": 2000,
+          "description": "Full details of the offering"
+        },
+        "image": {
+          "type": "string",
+          "description": "URL to item image"
+        },
+        "stock": {
+          "type": "number",
+          "description": "Remaining inventory count"
+        }
+      },
+      "required": ["title", "cost", "category", "description", "stock"]
+    },
+    "Otp": {
+      "title": "Otp",
+      "description": "A secure password-reset OTP verification document",
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "Email address being recovered"
+        },
+        "hashedOtp": {
+          "type": "string",
+          "description": "Secure bcrypt-hashed OTP verification code"
+        },
+        "expiresAt": {
+          "type": "number",
+          "description": "Epoch millisecond timestamp of expiration"
+        },
+        "attempts": {
+          "type": "number",
+          "description": "Failed verify attempts counter"
+        },
+        "requestTimes": {
+          "type": "array",
+          "description": "List of timestamps of OTP requests for rate limiting"
+        },
+        "isLocked": {
+          "type": "boolean",
+          "description": "Whether recovery is currently locked"
+        },
+        "lockedUntil": {
+          "type": "number",
+          "description": "Epoch millisecond unlock timestamp"
+        }
+      },
+      "required": ["email", "hashedOtp", "expiresAt", "attempts", "isLocked"]
+    },
+    "PasswordResetAuditLog": {
+      "title": "PasswordResetAuditLog",
+      "description": "Security audit logs for recovery events",
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "Target email"
+        },
+        "action": {
+          "type": "string",
+          "description": "Security action performed"
+        },
+        "timestamp": {
+          "type": "string",
+          "description": "ISO timestamp"
+        },
+        "ip": {
+          "type": "string",
+          "description": "Client IP address"
+        },
+        "userAgent": {
+          "type": "string",
+          "description": "Client Web Browser agent"
+        },
+        "details": {
+          "type": "string",
+          "description": "Text details of the event"
+        }
+      },
+      "required": ["email", "action", "timestamp", "ip", "userAgent", "details"]
+    }
+  },
+  "firestore": {
+    "users/{email}": {
+      "schema": "DbUser",
+      "description": "User profiles and wallet balances"
+    },
+    "activities/{activityId}": {
+      "schema": "EcoActivity",
+      "description": "Ecology logs, recycling rewards and credit records"
+    },
+    "transfers/{transferId}": {
+      "schema": "CoinTransfer",
+      "description": "Cross-border and P2P pending and processed money transfers"
+    },
+    "rewards/{rewardId}": {
+      "schema": "RewardItem",
+      "description": "Reward items catalog for the andaman shop"
+    },
+    "otps/{email}": {
+      "schema": "Otp",
+      "description": "OTP security hashes for password recovery"
+    },
+    "password_reset_audit_logs/{logId}": {
+      "schema": "PasswordResetAuditLog",
+      "description": "Security and password reset audit trails"
+    }
+  }
+}
